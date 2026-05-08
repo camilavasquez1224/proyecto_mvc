@@ -27,3 +27,7 @@ def edit_user(id):
 def remove_user(id):
     result = delete_user(id)
     return jsonify(result) if result else ('No encontrado', 404)
+
+@user_bp.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok'}), 200
