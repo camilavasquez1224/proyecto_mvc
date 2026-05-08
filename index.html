@@ -7,33 +7,103 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
-    header { background: #4f46e5; color: white; padding: 20px 40px; }
+
+    header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
     header h1 { font-size: 1.5rem; }
+    .badge {
+      background: rgba(255,255,255,0.2);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
     .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
-    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+
     h2 { margin-bottom: 16px; font-size: 1.1rem; color: #4f46e5; }
+
     .form-group { display: flex; gap: 10px; flex-wrap: wrap; }
-    input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; min-width: 150px; }
+    input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #eee;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      min-width: 150px;
+      transition: border-color 0.2s;
+    }
     input:focus { outline: none; border-color: #4f46e5; }
-    button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
-    .btn-primary { background: #4f46e5; color: white; }
-    .btn-primary:hover { background: #4338ca; }
-    .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; padding: 6px 12px; }
-    .btn-danger:hover { background: #dc2626; }
+
+    button { padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; }
+    .btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
+    .btn-primary:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(79,70,229,0.4); }
+    .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; padding: 6px 12px; border-radius: 8px; }
+    .btn-danger:hover { background: #dc2626; transform: scale(1.05); }
+
     table { width: 100%; border-collapse: collapse; }
     th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 0.85rem; color: #666; border-bottom: 2px solid #eee; }
     td { padding: 12px; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; }
-    tr:hover { background: #fafafa; }
+
+    tbody tr {
+      animation: fadeIn 0.4s ease;
+      transition: background 0.2s;
+    }
+    tbody tr:hover { background: #f5f3ff; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 0.85rem;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
     .status { text-align: center; padding: 20px; color: #999; }
-    .error { color: #ef4444; background: #fef2f2; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
-    .success { color: #16a34a; background: #f0fdf4; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
-    @media (max-width: 600px) { .form-group { flex-direction: column; } }
+    .error { color: #ef4444; background: #fef2f2; padding: 12px; border-radius: 10px; margin-bottom: 16px; }
+    .success { color: #16a34a; background: #f0fdf4; padding: 12px; border-radius: 10px; margin-bottom: 16px; animation: fadeIn 0.3s ease; }
+
+    .removing { animation: fadeOut 0.3s ease forwards; }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateX(20px); }
+    }
+
+    @media (max-width: 600px) {
+      header { flex-direction: column; gap: 10px; text-align: center; }
+      .form-group { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
 
 <header>
   <h1>Gestión de Usuarios</h1>
+  <div class="badge">Total: <span id="contador">0</span> usuarios</div>
 </header>
 
 <div class="container">
@@ -69,6 +139,13 @@
 
 <script>
   const API = 'http://127.0.0.1:5000/users';
+  const colores = ['#4f46e5','#7c3aed','#db2777','#059669','#d97706','#dc2626'];
+
+  function colorAvatar(nombre) {
+    let hash = 0;
+    for (let c of nombre) hash += c.charCodeAt(0);
+    return colores[hash % colores.length];
+  }
 
   async function cargarUsuarios() {
     try {
@@ -79,8 +156,11 @@
       const estado = document.getElementById('estado');
       const tabla = document.getElementById('tabla');
 
+      document.getElementById('contador').textContent = usuarios.length;
+
       if (usuarios.length === 0) {
         estado.textContent = 'No hay usuarios registrados.';
+        estado.style.display = 'block';
         tabla.style.display = 'none';
         return;
       }
@@ -88,10 +168,15 @@
       cuerpo.innerHTML = '';
       usuarios.forEach(u => {
         const fecha = new Date(u.created_at).toLocaleDateString('es-ES');
+        const inicial = u.name.charAt(0).toUpperCase();
+        const color = colorAvatar(u.name);
         cuerpo.innerHTML += `
-          <tr>
+          <tr id="fila-${u.id}">
             <td>${u.id}</td>
-            <td>${u.name}</td>
+            <td>
+              <span class="avatar" style="background:${color}">${inicial}</span>
+              ${u.name}
+            </td>
             <td>${u.email}</td>
             <td>${fecha}</td>
             <td><button class="btn-danger" onclick="eliminarUsuario(${u.id})">Eliminar</button></td>
@@ -101,7 +186,7 @@
       estado.style.display = 'none';
       tabla.style.display = 'table';
     } catch (e) {
-      document.getElementById('estado').innerHTML = `<span class="error">${e.message}</span>`;
+      document.getElementById('estado').innerHTML = `<div class="error">${e.message}</div>`;
     }
   }
 
@@ -137,6 +222,9 @@
   async function eliminarUsuario(id) {
     if (!confirm('¿Seguro que quieres eliminar este usuario?')) return;
     try {
+      const fila = document.getElementById(`fila-${id}`);
+      if (fila) fila.classList.add('removing');
+      await new Promise(r => setTimeout(r, 300));
       const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('No se pudo eliminar');
       cargarUsuarios();
