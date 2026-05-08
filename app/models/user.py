@@ -7,6 +7,9 @@ class User(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     name       = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
+    role       = db.Column(db.String(50), default='Usuario')
+    company    = db.Column(db.String(100), default='')
+    status     = db.Column(db.String(20), default='Activo')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -14,5 +17,8 @@ class User(db.Model):
             'id':         self.id,
             'name':       self.name,
             'email':      self.email,
+            'role':       self.role,
+            'company':    self.company,
+            'status':     self.status,
             'created_at': self.created_at.isoformat()
         }

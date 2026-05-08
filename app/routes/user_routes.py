@@ -1,9 +1,7 @@
 from flask import Blueprint, request, jsonify, send_from_directory
 import os
-
-from flask import Blueprint, request, jsonify
 from app.controllers.user_controller import (
-    get_all_users, get_user, create_user, update_user, delete_user
+    get_all_users, get_user, create_user, update_user, delete_user, get_stats
 )
 
 user_bp = Blueprint('users', __name__, url_prefix='/users')
@@ -35,6 +33,14 @@ def remove_user(id):
 def health():
     return jsonify({'status': 'ok'}), 200
 
+@user_bp.route('/stats', methods=['GET'])
+def stats():
+    return jsonify(get_stats())
+
 @user_bp.route('/app', methods=['GET'])
 def frontend():
     return send_from_directory(os.path.join(os.path.dirname(__file__), '..', '..'), 'index.html')
+
+@user_bp.route('/eva.png', methods=['GET'])
+def eva_image():
+    return send_from_directory(os.path.join(os.path.dirname(__file__), '..', '..'), 'eva.png')

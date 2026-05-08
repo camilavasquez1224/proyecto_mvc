@@ -1,134 +1,268 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Usuarios</title>
   <style>
+    :root {
+      --primary: #5B3DF5;
+      --primary-hover: #4C32D9;
+      --primary-light: rgba(91,61,245,0.15);
+      --bg: #0F0F13;
+      --surface: #1A1A24;
+      --surface2: #22222F;
+      --border: #2E2E3E;
+      --text: #F0F0FF;
+      --text-secondary: #8888AA;
+      --success: #34C759;
+      --warning: #FFB020;
+      --error: #F04438;
+      --info: #0A84FF;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     header {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      color: white;
-      padding: 24px 40px;
+      background: linear-gradient(135deg, #1A1A24, #22222F);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      gap: 16px;
     }
-    header h1 { font-size: 1.5rem; }
-    .badge {
-      background: rgba(255,255,255,0.2);
-      padding: 6px 16px;
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .eva-logo {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      object-fit: cover;
+      box-shadow: 0 0 12px rgba(91,61,245,0.5);
+      animation: pulse 3s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 12px rgba(91,61,245,0.5); }
+      50% { box-shadow: 0 0 24px rgba(91,61,245,0.9); }
+    }
+    header h1 { font-size: 1.3rem; font-weight: 700; }
+    header p { font-size: 0.8rem; color: var(--text-secondary); }
+
+    .health-indicator {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface2);
+      padding: 6px 14px;
       border-radius: 20px;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .health-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: blink 2s infinite;
+    }
+    .health-dot.offline { background: var(--error); animation: none; }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
     }
 
-    .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      padding: 20px 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1; min-width: 120px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; }
+    .stat-value.total { color: var(--primary); }
+    .stat-value.activos { color: var(--success); }
+    .stat-value.inactivos { color: var(--error); }
+
+    .container { max-width: 1000px; margin: 24px auto; padding: 0 24px; }
 
     .card {
-      background: white;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      transition: transform 0.2s;
+      margin-bottom: 20px;
     }
-    .card:hover { transform: translateY(-2px); }
+    h2 { margin-bottom: 16px; font-size: 1rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
 
-    h2 { margin-bottom: 16px; font-size: 1.1rem; color: #4f46e5; }
-
-    .form-group { display: flex; gap: 10px; flex-wrap: wrap; }
-    input {
-      flex: 1;
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
+    .form-group-item { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 0.8rem; color: var(--text-secondary); }
+    input, select {
       padding: 10px 14px;
-      border: 2px solid #eee;
+      background: var(--surface2);
+      border: 1px solid var(--border);
       border-radius: 10px;
-      font-size: 0.95rem;
-      min-width: 150px;
+      color: var(--text);
+      font-size: 0.9rem;
       transition: border-color 0.2s;
     }
-    input:focus { outline: none; border-color: #4f46e5; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); }
+    select option { background: var(--surface2); }
 
-    button { padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; }
-    .btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
-    .btn-primary:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(79,70,229,0.4); }
-    .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; padding: 6px 12px; border-radius: 8px; }
-    .btn-danger:hover { background: #dc2626; transform: scale(1.05); }
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-bar input { flex: 1; }
+
+    button { padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); transform: scale(1.03); }
+    .btn-danger { background: transparent; color: var(--error); border: 1px solid var(--error); font-size: 0.8rem; padding: 6px 12px; }
+    .btn-danger:hover { background: var(--error); color: white; }
 
     table { width: 100%; border-collapse: collapse; }
-    th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 0.85rem; color: #666; border-bottom: 2px solid #eee; }
-    td { padding: 12px; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; }
-
-    tbody tr {
-      animation: fadeIn 0.4s ease;
-      transition: background 0.2s;
-    }
-    tbody tr:hover { background: #f5f3ff; }
+    th { padding: 12px; text-align: left; font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    td { padding: 14px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    tbody tr { transition: background 0.2s; animation: fadeIn 0.3s ease; }
+    tbody tr:hover { background: var(--surface2); }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+    .removing { animation: fadeOut 0.3s ease forwards; }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateX(20px); }
     }
 
     .avatar {
-      width: 34px; height: 34px;
+      width: 32px; height: 32px;
       border-radius: 50%;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: white;
       font-weight: bold;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       margin-right: 8px;
       vertical-align: middle;
     }
 
-    .status { text-align: center; padding: 20px; color: #999; }
-    .error { color: #ef4444; background: #fef2f2; padding: 12px; border-radius: 10px; margin-bottom: 16px; }
-    .success { color: #16a34a; background: #f0fdf4; padding: 12px; border-radius: 10px; margin-bottom: 16px; animation: fadeIn 0.3s ease; }
-
-    .removing { animation: fadeOut 0.3s ease forwards; }
-    @keyframes fadeOut {
-      to { opacity: 0; transform: translateX(20px); }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
+    .badge-activo { background: rgba(52,199,89,0.15); color: var(--success); }
+    .badge-inactivo { background: rgba(240,68,56,0.15); color: var(--error); }
+    .badge-admin { background: rgba(91,61,245,0.15); color: var(--primary); }
+    .badge-usuario { background: rgba(136,136,170,0.15); color: var(--text-secondary); }
 
-    @media (max-width: 600px) {
-      header { flex-direction: column; gap: 10px; text-align: center; }
-      .form-group { flex-direction: column; }
+    .empty-state { text-align: center; padding: 48px 20px; }
+    .empty-state img { width: 100px; opacity: 0.8; margin-bottom: 16px; border-radius: 50%; }
+    .empty-state p { color: var(--text-secondary); }
+
+    .msg { padding: 12px; border-radius: 10px; margin-bottom: 16px; font-size: 0.9rem; animation: fadeIn 0.3s ease; }
+    .msg-error { background: rgba(240,68,56,0.1); color: var(--error); border: 1px solid rgba(240,68,56,0.3); }
+    .msg-success { background: rgba(52,199,89,0.1); color: var(--success); border: 1px solid rgba(52,199,89,0.3); }
+
+    @media (max-width: 700px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .stats-bar { gap: 10px; padding: 16px; }
+      header { flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Gestión de Usuarios</h1>
-  <div class="badge">Total: <span id="contador">0</span> usuarios</div>
+  <div class="header-left">
+    <img src="/users/eva.png" class="eva-logo" alt="EVA">
+    <div>
+      <h1>EVA Dashboard</h1>
+      <p>Gestión de Usuarios</p>
+    </div>
+  </div>
+  <div class="health-indicator">
+    <div class="health-dot" id="health-dot"></div>
+    <span id="health-text">Verificando...</span>
+  </div>
 </header>
+
+<div class="stats-bar">
+  <div class="stat-card">
+    <span class="stat-label">Total</span>
+    <span class="stat-value total" id="stat-total">0</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Activos</span>
+    <span class="stat-value activos" id="stat-activos">0</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Inactivos</span>
+    <span class="stat-value inactivos" id="stat-inactivos">0</span>
+  </div>
+</div>
 
 <div class="container">
 
   <div class="card">
     <h2>Agregar Usuario</h2>
     <div id="mensaje"></div>
-    <div class="form-group">
-      <input type="text" id="nombre" placeholder="Nombre completo">
-      <input type="email" id="email" placeholder="Correo electrónico">
-      <button class="btn-primary" onclick="crearUsuario()">Agregar</button>
+    <div class="form-grid">
+      <div class="form-group-item">
+        <label>Nombre</label>
+        <input type="text" id="nombre" placeholder="Nombre completo">
+      </div>
+      <div class="form-group-item">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="correo@empresa.com">
+      </div>
+      <div class="form-group-item">
+        <label>Empresa</label>
+        <input type="text" id="empresa" placeholder="Empresa">
+      </div>
+      <div class="form-group-item">
+        <label>Rol</label>
+        <select id="rol">
+          <option value="Usuario">Usuario</option>
+          <option value="Admin">Admin</option>
+          <option value="Editor">Editor</option>
+          <option value="Viewer">Viewer</option>
+        </select>
+      </div>
+      <div class="form-group-item">
+        <label>&nbsp;</label>
+        <button class="btn-primary" onclick="crearUsuario()">Agregar</button>
+      </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Lista de Usuarios</h2>
-    <div id="estado" class="status">Cargando...</div>
+    <h2>Usuarios</h2>
+    <div class="search-bar">
+      <input type="text" id="busqueda" placeholder="Buscar por nombre, email o empresa..." oninput="filtrar()">
+    </div>
+    <div id="estado"></div>
     <table id="tabla" style="display:none">
       <thead>
         <tr>
-          <th>#</th>
-          <th>Nombre</th>
+          <th>Usuario</th>
           <th>Email</th>
+          <th>Empresa</th>
+          <th>Rol</th>
+          <th>Estado</th>
           <th>Fecha</th>
-          <th>Acción</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="cuerpo"></tbody>
@@ -139,7 +273,8 @@
 
 <script>
   const API = 'http://127.0.0.1:5000/users';
-  const colores = ['#4f46e5','#7c3aed','#db2777','#059669','#d97706','#dc2626'];
+  const colores = ['#5B3DF5','#7c3aed','#db2777','#059669','#d97706','#0A84FF'];
+  let todosLosUsuarios = [];
 
   function colorAvatar(nombre) {
     let hash = 0;
@@ -147,56 +282,103 @@
     return colores[hash % colores.length];
   }
 
+  async function checkHealth() {
+    try {
+      const res = await fetch(API + '/health');
+      const dot = document.getElementById('health-dot');
+      const text = document.getElementById('health-text');
+      if (res.ok) {
+        dot.classList.remove('offline');
+        text.textContent = 'API activa';
+      } else throw new Error();
+    } catch {
+      document.getElementById('health-dot').classList.add('offline');
+      document.getElementById('health-text').textContent = 'API inactiva';
+    }
+  }
+
+  async function cargarStats() {
+    try {
+      const res = await fetch(API + '/stats');
+      const data = await res.json();
+      document.getElementById('stat-total').textContent = data.total;
+      document.getElementById('stat-activos').textContent = data.activos;
+      document.getElementById('stat-inactivos').textContent = data.inactivos;
+    } catch {}
+  }
+
+  function renderTabla(usuarios) {
+    const cuerpo = document.getElementById('cuerpo');
+    const estado = document.getElementById('estado');
+    const tabla = document.getElementById('tabla');
+
+    if (usuarios.length === 0) {
+      tabla.style.display = 'none';
+      estado.innerHTML = `
+        <div class="empty-state">
+          <img src="/users/eva.png" alt="EVA">
+          <p>No hay usuarios registrados aún.</p>
+        </div>`;
+      return;
+    }
+
+    cuerpo.innerHTML = '';
+    usuarios.forEach(u => {
+      const fecha = new Date(u.created_at).toLocaleDateString('es-ES');
+      const inicial = u.name.charAt(0).toUpperCase();
+      const color = colorAvatar(u.name);
+      const badgeEstado = u.status === 'Activo' ? 'badge-activo' : 'badge-inactivo';
+      const badgeRol = u.role === 'Admin' ? 'badge-admin' : 'badge-usuario';
+      cuerpo.innerHTML += `
+        <tr id="fila-${u.id}">
+          <td>
+            <span class="avatar" style="background:${color}">${inicial}</span>
+            ${u.name}
+          </td>
+          <td>${u.email}</td>
+          <td>${u.company || '—'}</td>
+          <td><span class="badge ${badgeRol}">${u.role}</span></td>
+          <td><span class="badge ${badgeEstado}">${u.status}</span></td>
+          <td>${fecha}</td>
+          <td><button class="btn-danger" onclick="eliminarUsuario(${u.id})">Eliminar</button></td>
+        </tr>`;
+    });
+
+    estado.innerHTML = '';
+    tabla.style.display = 'table';
+  }
+
   async function cargarUsuarios() {
     try {
       const res = await fetch(API + '/');
       if (!res.ok) throw new Error('Error al cargar usuarios');
-      const usuarios = await res.json();
-      const cuerpo = document.getElementById('cuerpo');
-      const estado = document.getElementById('estado');
-      const tabla = document.getElementById('tabla');
-
-      document.getElementById('contador').textContent = usuarios.length;
-
-      if (usuarios.length === 0) {
-        estado.textContent = 'No hay usuarios registrados.';
-        estado.style.display = 'block';
-        tabla.style.display = 'none';
-        return;
-      }
-
-      cuerpo.innerHTML = '';
-      usuarios.forEach(u => {
-        const fecha = new Date(u.created_at).toLocaleDateString('es-ES');
-        const inicial = u.name.charAt(0).toUpperCase();
-        const color = colorAvatar(u.name);
-        cuerpo.innerHTML += `
-          <tr id="fila-${u.id}">
-            <td>${u.id}</td>
-            <td>
-              <span class="avatar" style="background:${color}">${inicial}</span>
-              ${u.name}
-            </td>
-            <td>${u.email}</td>
-            <td>${fecha}</td>
-            <td><button class="btn-danger" onclick="eliminarUsuario(${u.id})">Eliminar</button></td>
-          </tr>`;
-      });
-
-      estado.style.display = 'none';
-      tabla.style.display = 'table';
+      todosLosUsuarios = await res.json();
+      renderTabla(todosLosUsuarios);
+      cargarStats();
     } catch (e) {
-      document.getElementById('estado').innerHTML = `<div class="error">${e.message}</div>`;
+      document.getElementById('estado').innerHTML = `<div class="msg msg-error">${e.message}</div>`;
     }
+  }
+
+  function filtrar() {
+    const q = document.getElementById('busqueda').value.toLowerCase();
+    const filtrados = todosLosUsuarios.filter(u =>
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      (u.company && u.company.toLowerCase().includes(q))
+    );
+    renderTabla(filtrados);
   }
 
   async function crearUsuario() {
     const nombre = document.getElementById('nombre').value.trim();
     const email = document.getElementById('email').value.trim();
+    const empresa = document.getElementById('empresa').value.trim();
+    const rol = document.getElementById('rol').value;
     const mensaje = document.getElementById('mensaje');
 
     if (!nombre || !email) {
-      mensaje.innerHTML = '<div class="error">Completa todos los campos.</div>';
+      mensaje.innerHTML = '<div class="msg msg-error">Nombre y email son obligatorios.</div>';
       return;
     }
 
@@ -204,18 +386,17 @@
       const res = await fetch(API + '/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: nombre, email: email })
+        body: JSON.stringify({ name: nombre, email, company: empresa, role: rol, status: 'Activo' })
       });
-
       if (!res.ok) throw new Error('No se pudo crear el usuario');
-
-      mensaje.innerHTML = '<div class="success">Usuario creado correctamente.</div>';
+      mensaje.innerHTML = '<div class="msg msg-success">Usuario creado correctamente.</div>';
       document.getElementById('nombre').value = '';
       document.getElementById('email').value = '';
+      document.getElementById('empresa').value = '';
       setTimeout(() => mensaje.innerHTML = '', 3000);
       cargarUsuarios();
     } catch (e) {
-      mensaje.innerHTML = `<div class="error">${e.message}</div>`;
+      mensaje.innerHTML = `<div class="msg msg-error">${e.message}</div>`;
     }
   }
 
@@ -233,6 +414,7 @@
     }
   }
 
+  checkHealth();
   cargarUsuarios();
 </script>
 
