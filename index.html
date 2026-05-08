@@ -7,10 +7,146 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+    header { background: #4f46e5; color: white; padding: 20px 40px; }
+    header h1 { font-size: 1.5rem; }
+    .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    h2 { margin-bottom: 16px; font-size: 1.1rem; color: #4f46e5; }
+    .form-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; min-width: 150px; }
+    input:focus { outline: none; border-color: #4f46e5; }
+    button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
+    .btn-primary { background: #4f46e5; color: white; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; padding: 6px 12px; }
+    .btn-danger:hover { background: #dc2626; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 0.85rem; color: #666; border-bottom: 2px solid #eee; }
+    td { padding: 12px; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; }
+    tr:hover { background: #fafafa; }
+    .status { text-align: center; padding: 20px; color: #999; }
+    .error { color: #ef4444; background: #fef2f2; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    .success { color: #16a34a; background: #f0fdf4; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    @media (max-width: 600px) { .form-group { flex-direction: column; } }
+  </style>
+</head>
+<body>
 
-    header {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      padding: 24px;
-      text-align: center;
+<header>
+  <h1>Gestión de Usuarios</h1>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Agregar Usuario</h2>
+    <div id="mensaje"></div>
+    <div class="form-group">
+      <input type="text" id="nombre" placeholder="Nombre completo">
+      <input type="email" id="email" placeholder="Correo electrónico">
+      <button class="btn-primary" onclick="crearUsuario()">Agregar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Lista de Usuarios</h2>
+    <div id="estado" class="status">Cargando...</div>
+    <table id="tabla" style="display:none">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Fecha</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const API = 'http://127.0.0.1:5000/users';
+
+  async function cargarUsuarios() {
+    try {
+      const res = await fetch(API + '/');
+      if (!res.ok) throw new Error('Error al cargar usuarios');
+      const usuarios = await res.json();
+      const cuerpo = document.getElementById('cuerpo');
+      const estado = document.getElementById('estado');
+      const tabla = document.getElementById('tabla');
+
+      if (usuarios.length === 0) {
+        estado.textContent = 'No hay usuarios registrados.';
+        tabla.style.display = 'none';
+        return;
+      }
+
+      cuerpo.innerHTML = '';
+      usuarios.forEach(u => {
+        const fecha = new Date(u.created_at).toLocaleDateString('es-ES');
+        cuerpo.innerHTML += `
+          <tr>
+            <td>${u.id}</td>
+            <td>${u.name}</td>
+            <td>${u.email}</td>
+            <td>${fecha}</td>
+            <td><button class="btn-danger" onclick="eliminarUsuario(${u.id})">Eliminar</button></td>
+          </tr>`;
+      });
+
+      estado.style.display = 'none';
+      tabla.style.display = 'table';
+    } catch (e) {
+      document.getElementById('estado').innerHTML = `<span class="error">${e.message}</span>`;
     }
+  }
+
+  async function crearUsuario() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const mensaje = document.getElementById('mensaje');
+
+    if (!nombre || !email) {
+      mensaje.innerHTML = '<div class="error">Completa todos los campos.</div>';
+      return;
+    }
+
+    try {
+      const res = await fetch(API + '/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nombre, email: email })
+      });
+
+      if (!res.ok) throw new Error('No se pudo crear el usuario');
+
+      mensaje.innerHTML = '<div class="success">Usuario creado correctamente.</div>';
+      document.getElementById('nombre').value = '';
+      document.getElementById('email').value = '';
+      setTimeout(() => mensaje.innerHTML = '', 3000);
+      cargarUsuarios();
+    } catch (e) {
+      mensaje.innerHTML = `<div class="error">${e.message}</div>`;
+    }
+  }
+
+  async function eliminarUsuario(id) {
+    if (!confirm('¿Seguro que quieres eliminar este usuario?')) return;
+    try {
+      const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('No se pudo eliminar');
+      cargarUsuarios();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  cargarUsuarios();
+</script>
+
+</body>
+</html>

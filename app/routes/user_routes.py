@@ -1,3 +1,6 @@
+from flask import Blueprint, request, jsonify, send_from_directory
+import os
+
 from flask import Blueprint, request, jsonify
 from app.controllers.user_controller import (
     get_all_users, get_user, create_user, update_user, delete_user
@@ -31,3 +34,7 @@ def remove_user(id):
 @user_bp.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok'}), 200
+
+@user_bp.route('/app', methods=['GET'])
+def frontend():
+    return send_from_directory(os.path.join(os.path.dirname(__file__), '..', '..'), 'index.html')
